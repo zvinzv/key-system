@@ -1,15 +1,22 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Readex_Pro, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
-
-const geistSans = Geist({
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/sonner";
+import { ReactQueryProvider } from "@/provider/react-query-provider";
+import Sidebar from "@/components/dashboard/sidebar";
+import { TooltipProvider } from "@/components/ui/tooltip";
+const geistSans = Readex_Pro({
   variable: "--font-geist-sans",
-  subsets: ["latin"],
+  // subsets: [""],
+  weight: ["200", "300", "400", "500", "600", "700"],
+  // weight: ["200", "300", "400", "500", "700"],
 });
 
-const geistMono = Geist_Mono({
+const geistMono = IBM_Plex_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  weight: ["100", "200", "300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -20,10 +27,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="ar"
+      dir="rtl"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col dark">{children}</body>
+      <body className="min-h-full flex flex-col  dark">
+        <TooltipProvider>
+          <ReactQueryProvider>{children}</ReactQueryProvider>
+        </TooltipProvider>
+        <Toaster richColors={true} />
+      </body>
     </html>
   );
 }

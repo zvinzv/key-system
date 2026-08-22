@@ -4,6 +4,7 @@ import { authClient } from "@/lib/auth-client";
 import { redirect, useRouter } from "next/navigation";
 import { signOutAction } from "../action/sign-out.action";
 import { useState } from "react";
+import { LogOut } from "lucide-react";
 
 export default function SignOutButton() {
   const [isLoading, setLoading] = useState(false);
@@ -13,8 +14,14 @@ export default function SignOutButton() {
   };
 
   return (
-    <Button onClick={handleSignIn} disabled={isLoading} variant={"destructive"}>
-      Sign Out
+    <Button
+      onClick={handleSignIn}
+      disabled={isLoading}
+      isLoading={isLoading}
+      variant={"destructive"}
+      size={"icon-lg"}
+    >
+      <LogOut />
     </Button>
   );
 }

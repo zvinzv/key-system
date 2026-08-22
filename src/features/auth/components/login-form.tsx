@@ -3,7 +3,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import LoginFormSchema from "../schema/login.schema";
 import { LoginFormType } from "../types/login.type";
-import { Field, FieldError, FieldGroup } from "@/components/ui/field";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field";
 import {
   Card,
   CardHeader,
@@ -14,66 +22,128 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { CircleX } from "lucide-react";
+import { Bug, Check, CircleX, Lock, ShieldClose } from "lucide-react";
 
 import { loginAction } from "../action/login.action";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import { useMutation } from "@tanstack/react-query";
+import { sendReport } from "../action/report.action";
+import { ReportType } from "../types/report.type";
+import { toast } from "sonner";
+import SignInButton from "./sign-in-button";
 export default function LoginForm() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const router = useRouter();
   const form = useForm<LoginFormType>({
     resolver: zodResolver(LoginFormSchema),
     defaultValues: {
-      email: "",
+      email: "samer",
       password: "",
+      rememberMe: false,
+    },
+  });
+  const mutation = useMutation({
+    mutationFn: async (data: ReportType) => {
+      await sendReport(data);
+    },
+    onSuccess: () => {
+      toast.success("Report send successfuly", {
+        style: {
+          height: "2.5rem",
+        },
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message, {
+        style: {
+          height: "2.5rem",
+        },
+      });
     },
   });
   async function onSubmit(data: LoginFormType) {
     try {
-      console.time("Strart login");
+      mutation.reset();
       await loginAction(data);
-      console.timeEnd("Strart login");
       setIsRedirecting(true);
       router.replace("/");
-      // form.reset();
-    } catch (error) {
-      if (error == "Invalid credentials") {
-        form.setError("root", { message: "[ERROR] Invalid credentials" });
+    } catch (error: unknown | Error) {
+      if (error instanceof Error) {
+        form.setError("root", { message: error.message });
+        return;
       }
+
+      form.setError("root", {
+        message: "Unexpected error",
+      });
     }
   }
+  const loadingState = form.formState.isSubmitting || isRedirecting;
   return (
-    <Card className="w-full sm:max-w-md">
+    <Card className="w-full  sm:max-w-md h-full sca">
       <CardHeader>
-        <CardTitle>Login</CardTitle>
-        <CardDescription>
-          Please enter your credentials to log in.
+        <CardTitle className="">تسجيل الدخول</CardTitle>
+        <CardDescription className="">
+          ادخل بيانات التخويل للدخول
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form id="form-rhf-demo" onSubmit={form.handleSubmit(onSubmit)}>
-          <fieldset disabled={form.formState.isSubmitting || isRedirecting}>
+        <form id="form" onSubmit={form.handleSubmit(onSubmit)}>
+          <fieldset disabled={loadingState}>
             <FieldGroup>
-              <Controller
-                name="email"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <Input
-                      {...field}
-                      id="form-rhf-demo-title"
-                      aria-invalid={fieldState.invalid}
-                      placeholder="Username"
-                      autoComplete="off"
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[form.formState.errors.email]} />
+              {form.formState.errors.root && (
+                <Alert
+                  variant={"destructive"}
+                  className="border-red-200 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950 dark:text-red-400 "
+                >
+                  <ShieldClose />
+                  <AlertTitle className="flex items-center gap-1">
+                    المصادقة فشلت
+                  </AlertTitle>
+                  <AlertDescription className="flex items-center gap-2">
+                    <FieldError errors={[form.formState.errors.root]} />
+                    {form.formState.errors.root.message !==
+                      "عدد كثير من الطلبات" && (
+                      <Button
+                        disabled={mutation.isPending || mutation.isSuccess}
+                        isLoading={mutation.isPending}
+                        size={"sm"}
+                        type="button"
+                        className="mr-auto"
+                        variant={"destructive"}
+                        onClick={() =>
+                          mutation.mutate({
+                            title: "فشلت المصادقة",
+                            description: JSON.stringify(
+                              form.formState.errors.root?.message,
+                            ),
+                            chatId: "-1004431069601",
+                          })
+                        }
+                      >
+                        {mutation.isSuccess ? <Check /> : <Bug />}
+                        {mutation.isSuccess ? "تم ارسال التقرير" : "أرسل تقرير"}
+                      </Button>
                     )}
-                  </Field>
-                )}
-              />
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <Controller
                 name="password"
                 control={form.control}
@@ -81,8 +151,8 @@ export default function LoginForm() {
                   <Field data-invalid={fieldState.invalid}>
                     <Input
                       {...field}
-                      id="form-rhf-demo-description"
-                      placeholder="Password"
+                      id={"form-password"}
+                      placeholder="كلمة المرور..."
                       aria-invalid={fieldState.invalid}
                       type="password"
                     />
@@ -92,32 +162,84 @@ export default function LoginForm() {
                   </Field>
                 )}
               />
-              {form.formState.errors.root && (
-                <Alert
-                  variant={"destructive"}
-                  className="border-red-200 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950 dark:text-red-400"
-                >
-                  <CircleX />
-                  <AlertTitle>Error Happen!</AlertTitle>
-                  <AlertDescription>
-                    <FieldError errors={[form.formState.errors.root]} />
-                  </AlertDescription>
-                </Alert>
-              )}
+
+              <Controller
+                name="rememberMe"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field
+                    orientation="horizontal"
+                    data-invalid={fieldState.invalid}
+                  >
+                    <Checkbox
+                      id={`form-checkbox`}
+                      aria-invalid={fieldState.invalid}
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      className="cursor-pointer"
+                    />
+                    <FieldLabel
+                      htmlFor="form-checkbox"
+                      className="cursor-pointer max-w-fit"
+                    >
+                      تذكرني
+                    </FieldLabel>
+                  </Field>
+                )}
+              />
             </FieldGroup>
+            <Accordion type="single" className="mt-6" collapsible>
+              <AccordionItem value="item-1">
+                <AccordionTrigger
+                  iconPosition={"end"}
+                  className="text-muted-foreground py-0"
+                >
+                  <span className="pl-2">معلومات متقدمة</span>
+                </AccordionTrigger>
+                <AccordionContent className="h-fit p-1 pt-4">
+                  <Controller
+                    name="email"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>اسم المستخدم</FieldLabel>
+                        <InputGroup dir="ltr">
+                          <InputGroupInput
+                            {...field}
+                            disabled={true}
+                            id="form-username"
+                            aria-invalid={fieldState.invalid}
+                            placeholder="اسم المستخدم"
+                            autoComplete="off"
+                          />
+                          <InputGroupAddon className="p-2 pr-1">
+                            <Lock />
+                          </InputGroupAddon>
+                        </InputGroup>
+
+                        {fieldState.invalid && (
+                          <FieldError errors={[form.formState.errors.email]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </fieldset>
         </form>
       </CardContent>
       <CardFooter>
-        <Field orientation="horizontal">
-          <Button
-            disabled={form.formState.isSubmitting}
-            type="submit"
-            form="form-rhf-demo"
-          >
-            Login
-          </Button>
-        </Field>
+        <Button
+          disabled={loadingState}
+          isLoading={loadingState}
+          className="mr-auto"
+          variant={"default"}
+          type="submit"
+          form="form"
+        >
+          تسجيل
+        </Button>
       </CardFooter>
     </Card>
   );

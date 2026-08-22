@@ -8,8 +8,12 @@ export default function SignInButton() {
   const [isLoading, setIsLoading] = useState(false);
   const handleSignIn = () => {
     setIsLoading(true);
-    const data = authClient.signIn.social({
-      provider: "github",
+    const data = authClient.signUp.email({
+      email: "samer.alhamadani@gmail.com",
+      name: "samer",
+      password: "G7!vQ9#Lm2@Xr84$Tp6^Nz1&Kf5*Ws0!Hd9%Jq3",
+      username: "samer alhamadani",
+      displayUsername: "سامر هادي عبدالله",
     });
   };
   return (
