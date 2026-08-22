@@ -14,10 +14,6 @@ export async function proxy(request: NextRequest) {
 
   console.log("[proxy] getSession:", Date.now() - start, "ms");
 
-  if (!sessionCookie) {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-
   return NextResponse.next();
 }
 
