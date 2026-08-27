@@ -76,22 +76,21 @@ export default function LoginForm() {
       });
     },
   });
-  async function onSubmit(data: LoginFormType) {
-    try {
-      mutation.reset();
-      await loginAction(data);
+  const loginMutation = useMutation({
+    mutationFn: async (data: LoginFormType) => {
       setIsRedirecting(true);
+      await loginAction(data);
+    },
+    onSuccess: () => {
       router.replace("/");
-    } catch (error: unknown | Error) {
-      if (error instanceof Error) {
-        form.setError("root", { message: error.message });
-        return;
-      }
-
-      form.setError("root", {
-        message: "Unexpected error",
-      });
-    }
+    },
+    onError: (error) => {
+      form.setError("root", { message: error.message });
+    },
+  });
+  async function onSubmit(data: LoginFormType) {
+    mutation.reset();
+    loginMutation.mutate(data);
   }
   const loadingState = form.formState.isSubmitting || isRedirecting;
   return (

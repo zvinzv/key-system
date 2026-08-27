@@ -10,16 +10,16 @@ import { rateLimit } from "@/lib/redis";
 
 export const login = async (data: LoginFormType) => {
   let { email, password } = data;
-  // const headersData = await headers();
-  // const ip = headersData.get("x-forwarded-for") ?? "127.0.0.1";
-  // try {
-  //   const limit = await rateLimit.limit(ip);
-  //   if (!limit.success) {
-  //     throw Error();
-  //   }
-  // } catch (error) {
-  //   throw Error("عدد كثير من الطلبات");
-  // }
+  const headersData = await headers();
+  const ip = headersData.get("x-forwarded-for") ?? "127.0.0.1";
+  try {
+    const limit = await rateLimit.limit(ip);
+    if (!limit.success) {
+      throw Error();
+    }
+  } catch (error) {
+    throw Error("عدد كثير من الطلبات");
+  }
   if (!email.includes("@")) {
     const user = await findEmailByUsername(email);
     if (!user) {
@@ -38,7 +38,7 @@ export const login = async (data: LoginFormType) => {
       returnStatus: true,
       headers: await headers(),
     });
-    // await rateLimit.resetUsedTokens(ip);
+    await rateLimit.resetUsedTokens(ip);
   } catch (error) {
     if (error instanceof APIError) {
       switch (error.body?.code) {
