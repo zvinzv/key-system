@@ -85,7 +85,7 @@ export default function LoginForm() {
       router.replace("/");
     },
     onError: (error) => {
-      alert("error");
+      alert(JSON.stringify(error));
       form.setError("root", { message: error.message });
     },
   });
