@@ -8,6 +8,6 @@ import { login } from "../services/login.services";
 import { redirect } from "next/navigation";
 
 export const loginAction = async (data: LoginFormType) => {
-  await login(data);
+  return await login(data);
   // redirect("/");
 };
