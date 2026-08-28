@@ -46,6 +46,7 @@ import { sendReport } from "../action/report.action";
 import { ReportType } from "../types/report.type";
 import { toast } from "sonner";
 import SignInButton from "./sign-in-button";
+import { sleep } from "@/util/sleep";
 export default function LoginForm() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const router = useRouter();
@@ -78,14 +79,16 @@ export default function LoginForm() {
   });
   const loginMutation = useMutation({
     mutationFn: async (data: LoginFormType) => {
-      setIsRedirecting(true);
-      await loginAction(data);
+      const loginData = await loginAction(data);
+
+      if (!loginData?.success) {
+        throw new Error(loginData?.massage);
+      }
     },
     onSuccess: () => {
       router.replace("/");
     },
     onError: (error) => {
-      alert(JSON.stringify(error));
       form.setError("root", { message: error.message });
     },
   });
@@ -93,7 +96,7 @@ export default function LoginForm() {
     mutation.reset();
     loginMutation.mutate(data);
   }
-  const loadingState = form.formState.isSubmitting || isRedirecting;
+  const loadingState = loginMutation.isPending;
   return (
     <Card className="w-full  sm:max-w-md h-full sca">
       <CardHeader>

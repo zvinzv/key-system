@@ -7,7 +7,15 @@ import { findEmailByUsername } from "../repositories/login.repository";
 import { headers } from "next/headers";
 import { APIError } from "better-auth/api";
 import { rateLimit } from "@/lib/redis";
-
+type Error = {
+  success: false;
+  massage: string;
+};
+type Success = {
+  success: true;
+  data: unknown;
+};
+type ReturnValue = Error | Success;
 export const login = async (data: LoginFormType) => {
   let { email, password } = data;
   const headersData = await headers();
@@ -15,15 +23,21 @@ export const login = async (data: LoginFormType) => {
   try {
     const limit = await rateLimit.limit(ip);
     if (!limit.success) {
-      throw Error();
+      return {
+        success: false,
+        massage: "عدد كثير من الطلبات",
+      };
     }
   } catch (error) {
-    throw Error("عدد كثير من الطلبات");
+    throw Error("خلل في قاعدة البيانات");
   }
   if (!email.includes("@")) {
     const user = await findEmailByUsername(email);
     if (!user) {
-      throw new Error("User can't found");
+      return {
+        success: false,
+        massage: "المستخدم غير موجود",
+      };
     }
     email = user;
   }
@@ -43,8 +57,10 @@ export const login = async (data: LoginFormType) => {
     if (error instanceof APIError) {
       switch (error.body?.code) {
         case "INVALID_EMAIL_OR_PASSWORD":
-          throw new Error("خطا في اسم المستخدم او كلمة المرور");
-
+          return {
+            success: false,
+            massage: "خطا في اسم المستخدم او كلمة المرور",
+          };
         default:
           throw error;
       }
