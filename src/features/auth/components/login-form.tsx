@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Bug, Check, CircleX, Lock, ShieldClose } from "lucide-react";
+import { Bug, Check, CircleX, Lock, ShieldClose, User2 } from "lucide-react";
 
 import { loginAction } from "../action/login.action";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -209,14 +209,13 @@ export default function LoginForm() {
                         <InputGroup dir="ltr">
                           <InputGroupInput
                             {...field}
-                            disabled={true}
                             id="form-username"
                             aria-invalid={fieldState.invalid}
                             placeholder="اسم المستخدم"
                             autoComplete="off"
                           />
                           <InputGroupAddon className="p-2 pr-1">
-                            <Lock />
+                            <User2 />
                           </InputGroupAddon>
                         </InputGroup>
 
